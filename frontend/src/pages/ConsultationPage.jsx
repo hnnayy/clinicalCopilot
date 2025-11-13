@@ -33,36 +33,73 @@ export default function ConsultationPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: Patient Info */}
               <div className="lg:col-span-2">
-                <div className="card p-6 bg-gradient-to-r from-secondary to-secondary/80 h-full">
-                  <h2 className="text-sm font-bold text-white/80 mb-4 uppercase tracking-wide">Data Pasien</h2>
-                  <div className="space-y-3 text-white text-sm">
+                <div className="card p-6 bg-gray-50 border-2 border-secondary/30 h-full">
+                  <h2 className="text-sm font-bold text-dark mb-4 uppercase tracking-wide">Data Pasien</h2>
+                  <div className="grid grid-cols-2 gap-6 text-sm">
+                    {/* Nama */}
                     <div>
-                      <p className="text-xs opacity-70 font-medium">Nama</p>
-                      <p className="text-base font-bold">{patientData.namaPasien}</p>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Nama</p>
+                      <p className="text-dark font-bold mt-1">{patientData.namaPasien}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs opacity-70 font-medium">No. RM</p>
-                        <p className="font-semibold">{patientData.noRM || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs opacity-70 font-medium">Jenis Kelamin</p>
-                        <p className="font-semibold">{patientData.jenisKelamin || '-'}</p>
-                      </div>
-                    </div>
+                    {/* No. RM */}
                     <div>
-                      <p className="text-xs opacity-70 font-medium">Alamat</p>
-                      <p className="text-xs font-semibold">{patientData.alamat}</p>
+                      <p className="text-xs text-gray-text font-semibold uppercase">No. RM</p>
+                      <p className="text-dark font-bold mt-1">{patientData.noRM || '-'}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <p className="opacity-70 font-medium">Golongan Darah</p>
-                        <p className="font-semibold">{patientData.golonganDarah || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="opacity-70 font-medium">Tgl. Lahir</p>
-                        <p className="font-semibold">{patientData.tanggalLahir || '-'}</p>
-                      </div>
+                    {/* Jenis Kelamin */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Jenis Kelamin</p>
+                      <p className="text-dark font-bold mt-1">{patientData.jenisKelamin || '-'}</p>
+                    </div>
+                    {/* Tempat Lahir */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Tempat Lahir</p>
+                      <p className="text-dark font-bold mt-1">{patientData.tempatLahir || '-'}</p>
+                    </div>
+                    {/* Tanggal Lahir */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Tanggal Lahir</p>
+                      <p className="text-dark font-bold mt-1">{patientData.tanggalLahir || '-'}</p>
+                    </div>
+                    {/* Ibu Kandung */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Ibu Kandung</p>
+                      <p className="text-dark font-bold mt-1">{patientData.ibuKandung || '-'}</p>
+                    </div>
+                    {/* Golongan Darah */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Golongan Darah</p>
+                      <p className="text-dark font-bold mt-1">{patientData.golonganDarah || '-'}</p>
+                    </div>
+                    {/* Status Nikah */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Status Nikah</p>
+                      <p className="text-dark font-bold mt-1">{patientData.statusNikah || '-'}</p>
+                    </div>
+                    {/* Agama */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Agama</p>
+                      <p className="text-dark font-bold mt-1">{patientData.agama || '-'}</p>
+                    </div>
+                    {/* Pendidikan */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Pendidikan</p>
+                      <p className="text-dark font-bold mt-1">{patientData.pendidikanTerakhir || '-'}</p>
+                    </div>
+                    {/* Bahasa */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Bahasa</p>
+                      <p className="text-dark font-bold mt-1">{patientData.bahasaDipakai || '-'}</p>
+                    </div>
+                    {/* Cacat Fisik */}
+                    <div>
+                      <p className="text-xs text-gray-text font-semibold uppercase">Cacat Fisik</p>
+                      <p className="text-dark font-bold mt-1">{patientData.cacatFisik || '-'}</p>
+                    </div>
+                    {/* Alamat - Full Width */}
+                    <div className="col-span-2">
+                      <p className="text-xs text-gray-text font-semibold uppercase">Alamat</p>
+                      <p className="text-dark font-bold mt-1">{patientData.alamat}</p>
                     </div>
                   </div>
                 </div>
