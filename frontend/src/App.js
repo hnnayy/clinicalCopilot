@@ -1,4 +1,3 @@
-import './App.css';
 import ConsultationPage from './pages/ConsultationPage';
 
 function App() {

@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import './AudioRecorder.css';
 
 export default function AudioRecorder({ onRecordingComplete }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -29,7 +28,6 @@ export default function AudioRecorder({ onRecordingComplete }) {
       mediaRecorder.start();
       setIsRecording(true);
 
-      // Timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -78,54 +76,59 @@ export default function AudioRecorder({ onRecordingComplete }) {
   };
 
   return (
-    <div className="recorder-card">
-      <div className="recorder-header">
-        <h3>🎤 Rekam Konsultasi Anda</h3>
-        <p>Tekan tombol rekam dan mulai berbicara</p>
+    <div className="card p-10 border border-gray-200">
+      {/* Header */}
+      <div className="text-center mb-8 border-b border-gray-100 pb-6">
+        <h3 className="text-2xl font-bold text-dark mb-2">🎤 Rekam Konsultasi Anda</h3>
+        <p className="text-gray-text font-normal">Tekan tombol rekam dan mulai berbicara</p>
       </div>
 
-      <div className="recorder-content">
+      {/* Content Area */}
+      <div className="min-h-40 flex items-center justify-center mb-8 bg-gradient-to-br from-primary-light to-blue-50 rounded-xl p-8 border border-gray-border">
         {!isRecording && !audioBlob && (
-          <div className="recording-info">
-            <div className="microphone-icon">🎙️</div>
-            <p>Siap merekam</p>
+          <div className="text-center">
+            <div className="text-5xl mb-4">🎙️</div>
+            <p className="text-dark font-semibold text-lg">Siap merekam</p>
           </div>
         )}
 
         {isRecording && (
-          <div className="recording-active">
-            <div className="recording-timer">
-              <div className="pulse"></div>
-              {formatTime(recordingTime)}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
+              <div className="text-4xl font-bold text-red-500 font-mono tracking-widest">
+                {formatTime(recordingTime)}
+              </div>
             </div>
-            <p>Sedang merekam...</p>
+            <p className="text-gray-text font-normal">Sedang merekam...</p>
           </div>
         )}
 
         {audioBlob && !isLoading && (
-          <div className="recording-success">
-            <div className="checkmark">✓</div>
-            <p>Audio berhasil direkam</p>
-            <p className="file-size">
+          <div className="text-center">
+            <div className="text-5xl mb-3">✓</div>
+            <p className="text-dark font-semibold text-lg mb-1">Audio berhasil direkam</p>
+            <p className="text-gray-text font-medium">
               {(audioBlob.size / 1024).toFixed(2)} KB
             </p>
           </div>
         )}
 
         {isLoading && (
-          <div className="transcribing">
-            <div className="loader"></div>
-            <p>Sedang melakukan transkripsi...</p>
-            <p className="subtitle">Ini mungkin memakan waktu beberapa saat</p>
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-gray-border border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
+            <p className="text-dark font-semibold text-lg mb-2">Sedang melakukan transkripsi...</p>
+            <p className="text-gray-text text-sm">Ini mungkin memakan waktu beberapa saat</p>
           </div>
         )}
       </div>
 
-      <div className="recorder-buttons">
+      {/* Buttons */}
+      <div className="flex gap-4 justify-center flex-wrap">
         {!isRecording && !audioBlob && (
           <button 
-            className="btn btn-record"
             onClick={startRecording}
+            className="btn-primary"
           >
             🔴 Mulai Rekam
           </button>
@@ -133,8 +136,8 @@ export default function AudioRecorder({ onRecordingComplete }) {
 
         {isRecording && (
           <button 
-            className="btn btn-stop"
             onClick={stopRecording}
+            className="btn bg-red-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-1"
           >
             ⏹️ Henti
           </button>
@@ -143,14 +146,14 @@ export default function AudioRecorder({ onRecordingComplete }) {
         {audioBlob && !isLoading && (
           <>
             <button 
-              className="btn btn-submit"
               onClick={submitAudio}
+              className="btn-primary"
             >
               ✓ Proses Transkripsi
             </button>
             <button 
-              className="btn btn-retry"
               onClick={() => setAudioBlob(null)}
+              className="btn-secondary"
             >
               🔄 Rekam Ulang
             </button>

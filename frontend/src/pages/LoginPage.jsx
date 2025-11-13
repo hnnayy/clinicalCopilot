@@ -5,108 +5,58 @@ import axios from 'axios';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
       const res = await axios.post('http://localhost:3001/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (error) {
-      alert('Login failed: ' + error.response?.data?.error);
+      setError('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #F8FAFB 0%, #EEF2F5 100%)',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto"'
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '50px',
-        borderRadius: '16px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 20px rgba(0, 0, 0, 0.05)',
-        maxWidth: '420px',
-        width: '100%',
-        marginLeft: '20px',
-        marginRight: '20px',
-        border: '1px solid #F0F0F0'
-      }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          color: '#2C3E50', 
-          marginBottom: '10px',
-          fontSize: '2rem',
-          fontWeight: '700',
-          letterSpacing: '-0.5px'
-        }}>
-          🏥 Clinical Copilot
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-primary-light via-blue-50 to-white flex items-center justify-center px-5 py-10">
+      <div className="card max-w-md w-full shadow-2xl">
+        {/* Header */}
+        <div className="text-center mb-8 border-b border-gray-100 pb-6">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+            🏥 HealthKathon
+          </h1>
+          <p className="text-gray-text font-normal">Platform Konsultasi Kesehatan</p>
+        </div>
 
-        <p style={{
-          textAlign: 'center',
-          color: '#7F8C8D',
-          fontSize: '1rem',
-          marginBottom: '35px',
-          fontWeight: '400'
-        }}>
-          Your AI Medical Assistant
-        </p>
-        
-        <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              color: '#2C3E50',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              marginBottom: '8px'
-            }}>
+        {/* Form */}
+        <form onSubmit={handleLogin} className="space-y-5 mb-6">
+          {/* Email Input */}
+          <div>
+            <label className="block text-sm font-semibold text-dark mb-2">
               Email
             </label>
             <input 
               type="email" 
-              placeholder="your@email.com" 
+              placeholder="contoh@email.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
               required
-              style={{
-                width: '100%',
-                padding: '12px 15px',
-                border: '2px solid #E8E8E8',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-                transition: 'all 0.3s ease',
-                background: '#F8FAFB'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#80A1BA';
-                e.target.style.background = 'white';
-                e.target.style.outline = 'none';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#E8E8E8';
-                e.target.style.background = '#F8FAFB';
-              }}
             />
           </div>
           
-          <div style={{ marginBottom: '30px' }}>
-            <label style={{
-              display: 'block',
-              color: '#2C3E50',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              marginBottom: '8px'
-            }}>
+          {/* Password Input */}
+          <div>
+            <label className="block text-sm font-semibold text-dark mb-2">
               Password
             </label>
             <input 
@@ -114,72 +64,40 @@ export default function LoginPage() {
               placeholder="••••••••" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="input-field"
               required
-              style={{
-                width: '100%',
-                padding: '12px 15px',
-                border: '2px solid #E8E8E8',
-                borderRadius: '10px',
-                fontSize: '1rem',
-                boxSizing: 'border-box',
-                transition: 'all 0.3s ease',
-                background: '#F8FAFB'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#80A1BA';
-                e.target.style.background = 'white';
-                e.target.style.outline = 'none';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#E8E8E8';
-                e.target.style.background = '#F8FAFB';
-              }}
             />
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
+              {error}
+            </div>
+          )}
           
+          {/* Login Button */}
           <button 
-            type="submit" 
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: 'linear-gradient(135deg, #80A1BA 0%, #5A7A92 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '1rem',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              textTransform: 'uppercase',
-              letterSpacing: '0.6px',
-              boxShadow: '0 4px 15px rgba(128, 161, 186, 0.25)',
-              marginBottom: '20px'
-            }}
-            onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-3px)';
-              e.target.style.boxShadow = '0 6px 25px rgba(128, 161, 186, 0.35)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 15px rgba(128, 161, 186, 0.25)';
-            }}
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary w-full disabled:opacity-70 disabled:cursor-not-allowed transition-all hover:shadow-xl hover:-translate-y-1"
           >
-            Sign In
+            {isLoading ? '🔄 Sedang masuk...' : '🚀 Masuk'}
           </button>
         </form>
 
-        <p style={{
-          textAlign: 'center',
-          color: '#95A5A6',
-          fontSize: '0.9rem',
-          marginTop: '20px',
-          paddingTop: '20px',
-          borderTop: '1px solid #F0F0F0',
-          fontWeight: '500'
-        }}>
-          Demo credentials: <br />
-          <span style={{ color: '#7F8C8D' }}>test@test.com / 123</span>
-        </p>
+        {/* Demo Info */}
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2 text-sm text-center">
+          <p className="font-bold text-dark mb-2">Akun Demo:</p>
+          <div className="space-y-1">
+            <p className="text-gray-text">
+              <span className="font-semibold text-primary">Email:</span> test@test.com
+            </p>
+            <p className="text-gray-text">
+              <span className="font-semibold text-primary">Password:</span> 123
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

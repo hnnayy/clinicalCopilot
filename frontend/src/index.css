@@ -1,29 +1,35 @@
-* {
-  --color-primary: #80A1BA;
-  --color-primary-dark: #5A7A92;
-  --color-secondary: #91C4C3;
-  --color-accent: #B4DEBD;
-  --color-light: #FFF7DD;
-  --color-success: #B4DEBD;
-  --color-warning: #FF6B35;
-  --color-danger: #E74C3C;
-  --color-gray-light: #F8FAFB;
-  --color-gray-text: #7F8C8D;
-  --color-dark: #2C3E50;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-primary-light to-blue-50 text-dark antialiased;
+  }
+
+  code {
+    @apply font-mono;
+  }
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #F8FAFB 0%, #EEF2F5 100%);
-  color: #2C3E50;
-}
+@layer components {
+  .btn {
+    @apply px-8 py-3 font-semibold rounded-lg transition-all duration-300 uppercase tracking-wide cursor-pointer;
+  }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-primary-dark border-2 border-gray-border hover:bg-primary-light hover:border-primary hover:-translate-y-1;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-primary-light border-2 border-gray-border rounded-lg text-dark transition-all duration-300 focus:border-primary focus:bg-white focus:outline-none;
+  }
 }
