@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FaHospitalUser, FaEnvelope, FaLock, FaArrowRight, FaSpinner } from 'react-icons/fa';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -32,7 +33,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8 border-b border-gray-100 pb-6">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-            🏥 HealthKathon
+            <FaHospitalUser style={{display: 'inline-block', marginRight: '8px', fontSize: '48px'}} />HealthKathon
           </h1>
           <p className="text-gray-text font-normal">Platform Konsultasi Kesehatan</p>
         </div>
@@ -42,7 +43,7 @@ export default function LoginPage() {
           {/* Email Input */}
           <div>
             <label className="block text-sm font-semibold text-dark mb-2">
-              Email
+              <FaEnvelope style={{display: 'inline-block', marginRight: '6px'}} />Email
             </label>
             <input 
               type="email" 
@@ -57,7 +58,7 @@ export default function LoginPage() {
           {/* Password Input */}
           <div>
             <label className="block text-sm font-semibold text-dark mb-2">
-              Password
+              <FaLock style={{display: 'inline-block', marginRight: '6px'}} />Password
             </label>
             <input 
               type="password" 
@@ -77,12 +78,12 @@ export default function LoginPage() {
           )}
           
           {/* Login Button */}
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
             className="btn-primary w-full disabled:opacity-70 disabled:cursor-not-allowed transition-all hover:shadow-xl hover:-translate-y-1"
           >
-            {isLoading ? '🔄 Sedang masuk...' : '🚀 Masuk'}
+            {isLoading ? <><FaSpinner style={{display: 'inline-block', marginRight: '8px', animation: 'spin 1s linear infinite'}} />Sedang masuk...</> : <><FaArrowRight style={{display: 'inline-block', marginRight: '8px'}} />Masuk</>}
           </button>
         </form>
 

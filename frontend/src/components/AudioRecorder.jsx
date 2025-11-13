@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { FaMicrophone, FaSpinner, FaCircle, FaStop, FaCheck, FaSync } from 'react-icons/fa';
 
 export default function AudioRecorder({ onRecordingComplete }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -76,70 +77,62 @@ export default function AudioRecorder({ onRecordingComplete }) {
   };
 
   return (
-    <div className="card p-10 border border-gray-200">
-      {/* Header */}
-      <div className="text-center mb-8 border-b border-gray-100 pb-6">
-        <h3 className="text-2xl font-bold text-dark mb-2">🎤 Rekam Konsultasi Anda</h3>
-        <p className="text-gray-text font-normal">Tekan tombol rekam dan mulai berbicara</p>
-      </div>
-
-      {/* Content Area */}
-      <div className="min-h-40 flex items-center justify-center mb-8 bg-gradient-to-br from-primary-light to-blue-50 rounded-xl p-8 border border-gray-border">
-        {!isRecording && !audioBlob && (
-          <div className="text-center">
-            <div className="text-5xl mb-4">🎙️</div>
-            <p className="text-dark font-semibold text-lg">Siap merekam</p>
+    <div className="space-y-4">
+      {/* Status Display */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        {!isRecording && !audioBlob && !isLoading && (
+          <div className="flex items-center gap-2 text-sm">
+            <FaMicrophone className="text-primary" />
+            <span className="font-medium text-dark">Siap merekam</span>
           </div>
         )}
 
         {isRecording && (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
-              <div className="text-4xl font-bold text-red-500 font-mono tracking-widest">
-                {formatTime(recordingTime)}
-              </div>
+          <div className="flex items-center gap-3">
+            <FaCircle className="text-red-500 text-2xl animate-pulse" />
+            <div>
+              <p className="text-sm font-bold text-red-600">{formatTime(recordingTime)}</p>
+              <p className="text-xs text-gray-text">Sedang merekam...</p>
             </div>
-            <p className="text-gray-text font-normal">Sedang merekam...</p>
           </div>
         )}
 
         {audioBlob && !isLoading && (
-          <div className="text-center">
-            <div className="text-5xl mb-3">✓</div>
-            <p className="text-dark font-semibold text-lg mb-1">Audio berhasil direkam</p>
-            <p className="text-gray-text font-medium">
-              {(audioBlob.size / 1024).toFixed(2)} KB
-            </p>
+          <div className="text-sm">
+            <p className="font-medium text-dark">Audio tersimpan ({(audioBlob.size / 1024).toFixed(1)} KB)</p>
           </div>
         )}
 
         {isLoading && (
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-gray-border border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
-            <p className="text-dark font-semibold text-lg mb-2">Sedang melakukan transkripsi...</p>
-            <p className="text-gray-text text-sm">Ini mungkin memakan waktu beberapa saat</p>
+          <div className="flex items-center gap-2">
+            <FaSpinner className="text-primary animate-spin text-sm" />
+            <span className="text-sm font-medium text-primary">Sedang transkripsi...</span>
           </div>
         )}
       </div>
 
+      {/* Audio Playback */}
+      {audioBlob && (
+        <audio src={URL.createObjectURL(audioBlob)} controls className="w-full h-8" />
+      )}
+
       {/* Buttons */}
-      <div className="flex gap-4 justify-center flex-wrap">
-        {!isRecording && !audioBlob && (
+      <div className="flex gap-2">
+        {!isRecording && !audioBlob && !isLoading && (
           <button 
             onClick={startRecording}
-            className="btn-primary"
+            className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
           >
-            🔴 Mulai Rekam
+            <FaCircle style={{fontSize: '10px'}} />Mulai
           </button>
         )}
 
         {isRecording && (
           <button 
             onClick={stopRecording}
-            className="btn bg-red-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-1"
+            className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
           >
-            ⏹️ Henti
+            <FaStop style={{fontSize: '12px'}} />Berhenti
           </button>
         )}
 
@@ -147,15 +140,15 @@ export default function AudioRecorder({ onRecordingComplete }) {
           <>
             <button 
               onClick={submitAudio}
-              className="btn-primary"
+              className="flex items-center gap-1 bg-primary hover:bg-primary-dark text-white px-3 py-2 rounded-lg text-sm font-medium transition"
             >
-              ✓ Proses Transkripsi
+              <FaCheck style={{fontSize: '12px'}} />Proses
             </button>
             <button 
               onClick={() => setAudioBlob(null)}
-              className="btn-secondary"
+              className="flex items-center gap-1 bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
             >
-              🔄 Rekam Ulang
+              <FaSync style={{fontSize: '12px'}} />Ulang
             </button>
           </>
         )}
