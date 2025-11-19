@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { FaMicrophone, FaSpinner, FaCircle, FaStop, FaCheck, FaSync } from 'react-icons/fa';
+import { supabase } from '../supabaseClient';
 
 export default function AudioRecorder({ onRecordingComplete, patient, onPatientCreated }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -44,65 +45,131 @@ export default function AudioRecorder({ onRecordingComplete, patient, onPatientC
 
   const submitAudio = async () => {
     setIsLoading(true);
-    const formData = new FormData();
-    formData.append('audio', audioBlob);
-    // attach patient info if available
     try {
       let localPatientId = null;
       if (patient) {
         // if patient has no server id, create it first
         localPatientId = patient.patientId || patient.id || null;
         if (!localPatientId && (patient.namaPasien || patient.name)) {
-          // create patient on backend
+          // create patient on Supabase
           try {
-            const createRes = await fetch('http://127.0.0.1:3001/api/patients', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: patient.namaPasien || patient.name || '', jkn_number: patient.noRM || patient.jkn_number || '', dob: patient.tanggalLahir || patient.dob || null })
-            });
-            const createData = await createRes.json();
-            if (createRes.ok && createData.id) {
-              localPatientId = createData.id;
-              // inform parent so it can persist patientId
-              try { if (typeof onPatientCreated === 'function') onPatientCreated(localPatientId); } catch(e) { console.warn('onPatientCreated callback error', e); }
-            } else {
-              console.warn('Failed to create patient before upload', createData);
-            }
+            const patientPayload = {
+              name: patient.namaPasien || patient.name || '',
+              jkn_number: patient.noRM || patient.jkn_number || null,
+              dob: patient.tanggalLahir || patient.dob || null
+            };
+
+            const { data, error } = await supabase
+              .from('patients')
+              .insert(patientPayload)
+              .select()
+              .single();
+
+            if (error) throw error;
+            localPatientId = data.id;
+            // inform parent so it can persist patientId
+            try { if (typeof onPatientCreated === 'function') onPatientCreated(localPatientId); } catch(e) { console.warn('onPatientCreated callback error', e); }
           } catch (err) {
             console.warn('Error creating patient before upload', err.message);
           }
         }
-
-        const payload = {
-          id: localPatientId,
-          name: patient.namaPasien || patient.name || '',
-          jkn_number: patient.noRM || patient.jkn_number || '',
-          dob: patient.tanggalLahir || patient.dob || ''
-        };
-        console.log('DEBUG: attaching patient payload to FormData:', payload);
-        formData.append('patient', JSON.stringify(payload));
       }
-    } catch (e) {
-      console.warn('Failed to attach patient info', e);
-    }
 
-    try {
-      const res = await fetch('http://localhost:3001/api/consultations/transcribe', {
+      // Upload audio to Assembly AI
+      console.log('Uploading audio to Assembly AI...');
+      const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
         method: 'POST',
-        body: formData,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          'Authorization': '500e4dec21b64520bea78d5d355c66f9', // Assembly AI API key
+          'Content-Type': 'audio/webm'
+        },
+        body: audioBlob
       });
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Upload failed');
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload audio');
       }
-      
-      onRecordingComplete(data);
+
+      const uploadData = await uploadResponse.json();
+      const uploadUrl = uploadData.upload_url;
+
+      // Submit transcription request
+      console.log('Submitting transcription request...');
+      const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+        method: 'POST',
+        headers: {
+          'Authorization': '500e4dec21b64520bea78d5d355c66f9',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          audio_url: uploadUrl,
+          language_code: 'id'
+        })
+      });
+
+      if (!transcriptResponse.ok) {
+        throw new Error('Failed to submit transcription');
+      }
+
+      const transcriptData = await transcriptResponse.json();
+      const transcriptId = transcriptData.id;
+
+      // Poll for completion
+      let transcription = null;
+      let attempts = 0;
+      const maxAttempts = 120;
+
+      while (!transcription && attempts < maxAttempts) {
+        const checkResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+          headers: {
+            'Authorization': '500e4dec21b64520bea78d5d355c66f9'
+          }
+        });
+
+        const statusData = await checkResponse.json();
+
+        if (statusData.status === 'completed') {
+          transcription = statusData.text;
+          break;
+        } else if (statusData.status === 'error') {
+          throw new Error('Transcription failed');
+        }
+
+        // Wait 1 second before polling again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      }
+
+      if (!transcription) {
+        throw new Error('Transcription timeout');
+      }
+
+      // Save to Supabase
+      console.log('Saving to Supabase...');
+      const consultationPayload = {
+        doctor_id: 1, // Default doctor ID
+        patient_id: localPatientId,
+        transcription: transcription,
+        status: 'TRANSCRIBED'
+      };
+
+      const { data: consultationData, error: consultationError } = await supabase
+        .from('consultations')
+        .insert(consultationPayload)
+        .select()
+        .single();
+
+      if (consultationError) throw consultationError;
+
+      const result = {
+        transcription: transcription,
+        consultationId: consultationData.id
+      };
+
+      onRecordingComplete(result);
       setAudioBlob(null);
     } catch (error) {
+      console.error('Transcription error:', error);
       alert(`Error transkripsi: ${error.message}`);
     } finally {
       setIsLoading(false);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 export default function PatientRegistration({ onRegistrationComplete }) {
   const [formData, setFormData] = useState({
@@ -43,12 +44,87 @@ export default function PatientRegistration({ onRegistrationComplete }) {
         if (!patientId) throw new Error('Harap isi semua field yang wajib');
       }
 
-      // Save to localStorage for now (will be saved to DB later)
-      const out = { ...formData, patientId };
+      // Prepare payload untuk Supabase
+      const payload = {
+        jkn_number: formData.noRM || null,
+        name: formData.namaPasien,
+        dob: formData.tanggalLahir || null,
+        alamat: formData.alamat,
+        jenis_kelamin: formData.jenisKelamin || null,
+        tempat_lahir: formData.tempatLahir || null,
+        ibu_kandung: formData.ibuKandung || null,
+        golongan_darah: formData.golonganDarah || null,
+        status_nikah: formData.statusNikah || null,
+        agama: formData.agama || null,
+        pendidikan_terakhir: formData.pendidikanTerakhir || null,
+        bahasa_dipakai: formData.bahasaDipakai || null,
+        cacat_fisik: formData.cacatFisik || null
+      };
+
+      let patientIdToUse = patientId;
+
+      // If we have a patientId, update existing patient
+      if (patientId) {
+        const { data, error } = await supabase
+          .from('patients')
+          .update(payload)
+          .eq('id', patientId)
+          .select()
+          .single();
+
+        if (error) throw error;
+        patientIdToUse = data.id;
+      } else {
+        // Check if patient with same JKN already exists
+        if (payload.jkn_number) {
+          const { data: existingPatient } = await supabase
+            .from('patients')
+            .select('id')
+            .eq('jkn_number', payload.jkn_number)
+            .single();
+
+          if (existingPatient) {
+            // Update existing patient
+            const { data, error } = await supabase
+              .from('patients')
+              .update(payload)
+              .eq('id', existingPatient.id)
+              .select()
+              .single();
+
+            if (error) throw error;
+            patientIdToUse = data.id;
+          } else {
+            // Create new patient
+            const { data, error } = await supabase
+              .from('patients')
+              .insert(payload)
+              .select()
+              .single();
+
+            if (error) throw error;
+            patientIdToUse = data.id;
+          }
+        } else {
+          // Create new patient without JKN
+          const { data, error } = await supabase
+            .from('patients')
+            .insert(payload)
+            .select()
+            .single();
+
+          if (error) throw error;
+          patientIdToUse = data.id;
+        }
+      }
+
+      // Simpan patientId dari response
+      const out = { ...formData, patientId: patientIdToUse };
       localStorage.setItem('patientData', JSON.stringify(out));
 
       onRegistrationComplete(out);
     } catch (err) {
+      console.error('Error saving patient:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -62,11 +138,21 @@ export default function PatientRegistration({ onRegistrationComplete }) {
     try {
       const name = formData.namaPasien || '';
       const dob = formData.tanggalLahir || '';
-      const params = new URLSearchParams();
-      if (name) params.append('name', name);
-      if (dob) params.append('dob', dob);
-      const res = await fetch(`http://localhost:3001/api/patients?${params.toString()}`);
-      const data = await res.json();
+
+      let query = supabase.from('patients').select('*');
+
+      if (name) {
+        query = query.ilike('name', `%${name}%`);
+      }
+
+      if (dob) {
+        query = query.eq('dob', dob);
+      }
+
+      const { data, error } = await query.limit(50);
+
+      if (error) throw error;
+
       setSearchResults(data || []);
       if (!data || data.length === 0) {
         setError('Tidak ada pasien ditemukan. Anda bisa lanjut membuat pasien baru.');

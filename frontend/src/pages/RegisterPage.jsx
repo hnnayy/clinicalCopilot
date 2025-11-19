@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { supabase } from '../supabaseClient';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -13,13 +13,22 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:3001/api/auth/register', 
-        { email, password, name }
-      );
-      alert('Registration successful! Please login.');
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      alert('Registration successful! Please check your email to confirm your account.');
       navigate('/login');
     } catch (error) {
-      alert('Registration failed: ' + error.response?.data?.error);
+      alert('Registration failed: ' + error.message);
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AudioRecorder from '../components/AudioRecorder';
-import PatientRegistration from '../components/PatientRegistration';
 import { FaCheckCircle } from 'react-icons/fa';
 
 export default function ConsultationPage() {
@@ -8,10 +8,24 @@ export default function ConsultationPage() {
   const [transcription, setTranscription] = useState('');
   const [showTranscription, setShowTranscription] = useState(false);
   const [consultationId, setConsultationId] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleRegistrationComplete = (data) => {
-    setPatientData(data);
-  };
+  // Check if returning from report page
+  useEffect(() => {
+    if (location.state?.showTranscription) {
+      setPatientData(location.state.patientData);
+      setTranscription(location.state.transcription);
+      setConsultationId(location.state.consultationId);
+      setShowTranscription(true);
+    } else {
+      // Load patient data dari localStorage
+      const saved = localStorage.getItem('patientData');
+      if (saved) {
+        setPatientData(JSON.parse(saved));
+      }
+    }
+  }, [location.state]);
   
   // Persist patientId when child creates a patient during upload
   const handlePatientCreated = (newPatientId) => {
@@ -34,7 +48,17 @@ export default function ConsultationPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-light to-blue-50 py-6">
       <div className="max-w-full mx-auto px-4">
         {patientData === null ? (
-          <PatientRegistration onRegistrationComplete={handleRegistrationComplete} />
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <p className="text-lg text-gray-600 mb-4">Data pasien tidak ditemukan.</p>
+              <button 
+                onClick={() => navigate('/')}
+                className="btn-primary px-6 py-2"
+              >
+                Kembali ke Pendaftaran
+              </button>
+            </div>
+          </div>
         ) : !showTranscription ? (
           <>
             {/* Patient Info + Audio Recorder Side by Side */}
@@ -141,15 +165,20 @@ export default function ConsultationPage() {
                 <button 
                   className="btn-primary text-sm px-4 py-2"
                   onClick={() => {
-                    if (consultationId) {
-                      // open generated CME notes in a new tab
-                      window.open(`http://127.0.0.1:3001/api/consultations/${consultationId}/notes`, '_blank');
+                    if (consultationId && transcription) {
+                      navigate('/report', {
+                        state: {
+                          consultationId,
+                          transcription,
+                          patientData
+                        }
+                      });
                     } else {
-                      alert('ID konsultasi belum tersedia. Pastikan transkripsi selesai dan tersimpan.');
+                      alert('Data konsultasi belum lengkap.');
                     }
                   }}
                 >
-                  Simpan
+                  Lihat Laporan
                 </button>
                 <button 
                   className="btn-secondary text-sm px-4 py-2"

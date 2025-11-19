@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { supabase } from '../supabaseClient';
 import { FaHospitalUser, FaEnvelope, FaLock, FaArrowRight, FaSpinner } from 'react-icons/fa';
 
 export default function LoginPage() {
@@ -16,12 +16,18 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:3001/api/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      // Store user data
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/');
     } catch (error) {
-      setError('Login failed: ' + (error.response?.data?.error || 'Unknown error'));
+      setError('Login failed: ' + error.message);
     } finally {
       setIsLoading(false);
     }
