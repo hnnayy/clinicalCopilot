@@ -19,6 +19,9 @@ export default function PatientRegistration({ onRegistrationComplete }) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [patientId, setPatientId] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,19 +38,56 @@ export default function PatientRegistration({ onRegistrationComplete }) {
 
     try {
       // Validate required fields
-      if (!formData.noRM || !formData.namaPasien || !formData.alamat) {
-        throw new Error('Harap isi semua field yang wajib');
+      if (!formData.namaPasien || !formData.alamat) {
+        // if patient already selected (patientId) allow missing alamat
+        if (!patientId) throw new Error('Harap isi semua field yang wajib');
       }
 
       // Save to localStorage for now (will be saved to DB later)
-      localStorage.setItem('patientData', JSON.stringify(formData));
+      const out = { ...formData, patientId };
+      localStorage.setItem('patientData', JSON.stringify(out));
 
-      onRegistrationComplete(formData);
+      onRegistrationComplete(out);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async () => {
+    setSearching(true);
+    setSearchResults([]);
+    setError('');
+    try {
+      const name = formData.namaPasien || '';
+      const dob = formData.tanggalLahir || '';
+      const params = new URLSearchParams();
+      if (name) params.append('name', name);
+      if (dob) params.append('dob', dob);
+      const res = await fetch(`http://localhost:3001/api/patients?${params.toString()}`);
+      const data = await res.json();
+      setSearchResults(data || []);
+      if (!data || data.length === 0) {
+        setError('Tidak ada pasien ditemukan. Anda bisa lanjut membuat pasien baru.');
+      }
+    } catch (err) {
+      setError('Gagal mencari pasien: ' + err.message);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectPatient = (p) => {
+    setPatientId(p.id);
+    setFormData(prev => ({
+      ...prev,
+      namaPasien: p.name || prev.namaPasien,
+      tanggalLahir: p.dob ? p.dob.toString().slice(0,10) : prev.tanggalLahir,
+      noRM: prev.noRM || ''
+    }));
+    setSearchResults([]);
+    setError('');
   };
 
   return (
@@ -83,14 +123,30 @@ export default function PatientRegistration({ onRegistrationComplete }) {
                 <label className="block text-sm font-semibold text-dark mb-2">
                   Nama Pasien *
                 </label>
-                <input
-                  type="text"
-                  name="namaPasien"
-                  value={formData.namaPasien}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="namaPasien"
+                    value={formData.namaPasien}
+                    onChange={handleChange}
+                    className="input-field"
+                    required
+                  />
+                  <button type="button" onClick={handleSearch} disabled={searching} className="btn-secondary">
+                    {searching ? 'Mencari...' : 'Cari'}
+                  </button>
+                </div>
+                {/* Search results */}
+                {searchResults.length > 0 && (
+                  <div className="mt-2 bg-white border rounded shadow-sm p-2">
+                    {searchResults.map(p => (
+                      <div key={p.id} className="p-2 hover:bg-gray-100 cursor-pointer" onClick={() => handleSelectPatient(p)}>
+                        <div className="text-sm font-semibold">{p.name} {p.jkn_number ? `• JKN: ${p.jkn_number}` : ''}</div>
+                        <div className="text-xs text-gray-500">DOB: {p.dob || '-'}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

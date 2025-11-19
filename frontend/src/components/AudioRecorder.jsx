@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { FaMicrophone, FaSpinner, FaCircle, FaStop, FaCheck, FaSync } from 'react-icons/fa';
 
-export default function AudioRecorder({ onRecordingComplete }) {
+export default function AudioRecorder({ onRecordingComplete, patient, onPatientCreated }) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +46,45 @@ export default function AudioRecorder({ onRecordingComplete }) {
     setIsLoading(true);
     const formData = new FormData();
     formData.append('audio', audioBlob);
+    // attach patient info if available
+    try {
+      let localPatientId = null;
+      if (patient) {
+        // if patient has no server id, create it first
+        localPatientId = patient.patientId || patient.id || null;
+        if (!localPatientId && (patient.namaPasien || patient.name)) {
+          // create patient on backend
+          try {
+            const createRes = await fetch('http://127.0.0.1:3001/api/patients', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: patient.namaPasien || patient.name || '', jkn_number: patient.noRM || patient.jkn_number || '', dob: patient.tanggalLahir || patient.dob || null })
+            });
+            const createData = await createRes.json();
+            if (createRes.ok && createData.id) {
+              localPatientId = createData.id;
+              // inform parent so it can persist patientId
+              try { if (typeof onPatientCreated === 'function') onPatientCreated(localPatientId); } catch(e) { console.warn('onPatientCreated callback error', e); }
+            } else {
+              console.warn('Failed to create patient before upload', createData);
+            }
+          } catch (err) {
+            console.warn('Error creating patient before upload', err.message);
+          }
+        }
+
+        const payload = {
+          id: localPatientId,
+          name: patient.namaPasien || patient.name || '',
+          jkn_number: patient.noRM || patient.jkn_number || '',
+          dob: patient.tanggalLahir || patient.dob || ''
+        };
+        console.log('DEBUG: attaching patient payload to FormData:', payload);
+        formData.append('patient', JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.warn('Failed to attach patient info', e);
+    }
 
     try {
       const res = await fetch('http://localhost:3001/api/consultations/transcribe', {

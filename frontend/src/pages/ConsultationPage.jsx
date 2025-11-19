@@ -7,13 +7,21 @@ export default function ConsultationPage() {
   const [patientData, setPatientData] = useState(null);
   const [transcription, setTranscription] = useState('');
   const [showTranscription, setShowTranscription] = useState(false);
+  const [consultationId, setConsultationId] = useState(null);
 
   const handleRegistrationComplete = (data) => {
     setPatientData(data);
   };
+  
+  // Persist patientId when child creates a patient during upload
+  const handlePatientCreated = (newPatientId) => {
+    setPatientData(prev => ({ ...(prev || {}), patientId: newPatientId }));
+  };
 
   const handleRecordingComplete = (data) => {
     setTranscription(data.transcription);
+    // store consultationId returned by backend (if any)
+    if (data.consultationId) setConsultationId(data.consultationId);
     setShowTranscription(true);
   };
 
@@ -109,7 +117,7 @@ export default function ConsultationPage() {
               <div>
                 <div className="card p-6">
                   <h2 className="text-sm font-bold text-dark mb-4 uppercase tracking-wide">Perekaman</h2>
-                  <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+                  <AudioRecorder onRecordingComplete={handleRecordingComplete} patient={patientData} onPatientCreated={handlePatientCreated} />
                 </div>
               </div>
             </div>
@@ -132,7 +140,14 @@ export default function ConsultationPage() {
               <div className="flex gap-3 justify-center">
                 <button 
                   className="btn-primary text-sm px-4 py-2"
-                  onClick={() => alert('Konsultasi disimpan!')}
+                  onClick={() => {
+                    if (consultationId) {
+                      // open generated CME notes in a new tab
+                      window.open(`http://127.0.0.1:3001/api/consultations/${consultationId}/notes`, '_blank');
+                    } else {
+                      alert('ID konsultasi belum tersedia. Pastikan transkripsi selesai dan tersimpan.');
+                    }
+                  }}
                 >
                   Simpan
                 </button>
