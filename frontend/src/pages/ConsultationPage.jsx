@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AudioRecorder from '../components/AudioRecorder';
+import AIDiagnosisPanel from '../components/AIDiagnosisPanel';
 import { FaCheckCircle } from 'react-icons/fa';
 
 export default function ConsultationPage() {
@@ -160,6 +161,25 @@ export default function ConsultationPage() {
                   {transcription}
                 </p>
               </div>
+
+              <AIDiagnosisPanel 
+                transcription={transcription}
+                patientData={patientData}
+                onDiagnosisGenerated={(diagnosis) => {
+                  if (consultationId && transcription) {
+                    navigate('/report', {
+                      state: {
+                        consultationId,
+                        transcription,
+                        patientData,
+                        diagnosis // Pass the generated diagnosis
+                      }
+                    });
+                  } else {
+                    alert('Data konsultasi belum lengkap (ID Konsultasi hilang).');
+                  }
+                }}
+              />
 
               <div className="flex gap-3 justify-center">
                 <button 

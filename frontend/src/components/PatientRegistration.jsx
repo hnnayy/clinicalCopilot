@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { cachedQuery, queryCache } from '../utils/queryCache';
 
 export default function PatientRegistration({ onRegistrationComplete }) {
   const [formData, setFormData] = useState({
@@ -122,6 +123,9 @@ export default function PatientRegistration({ onRegistrationComplete }) {
       const out = { ...formData, patientId: patientIdToUse };
       localStorage.setItem('patientData', JSON.stringify(out));
 
+      // Clear cache untuk patients karena data berubah
+      queryCache.clearTable('patients');
+
       onRegistrationComplete(out);
     } catch (err) {
       console.error('Error saving patient:', err);
@@ -149,9 +153,11 @@ export default function PatientRegistration({ onRegistrationComplete }) {
         query = query.eq('dob', dob);
       }
 
-      const { data, error } = await query.limit(50);
-
-      if (error) throw error;
+      const data = await cachedQuery(
+        query.limit(50),
+        'patients',
+        { search: { name, dob }, limit: 50 }
+      );
 
       setSearchResults(data || []);
       if (!data || data.length === 0) {
@@ -166,12 +172,21 @@ export default function PatientRegistration({ onRegistrationComplete }) {
 
   const handleSelectPatient = (p) => {
     setPatientId(p.id);
-    setFormData(prev => ({
-      ...prev,
-      namaPasien: p.name || prev.namaPasien,
-      tanggalLahir: p.dob ? p.dob.toString().slice(0,10) : prev.tanggalLahir,
-      noRM: prev.noRM || ''
-    }));
+    setFormData({
+      noRM: p.jkn_number || '',
+      namaPasien: p.name || '',
+      alamat: p.alamat || '',
+      jenisKelamin: p.jenis_kelamin || '',
+      tempatLahir: p.tempat_lahir || '',
+      tanggalLahir: p.dob ? p.dob.toString().slice(0,10) : '',
+      ibuKandung: p.ibu_kandung || '',
+      golonganDarah: p.golongan_darah || '',
+      statusNikah: p.status_nikah || '',
+      agama: p.agama || '',
+      pendidikanTerakhir: p.pendidikan_terakhir || '',
+      bahasaDipakai: p.bahasa_dipakai || '',
+      cacatFisik: p.cacat_fisik || ''
+    });
     setSearchResults([]);
     setError('');
   };
